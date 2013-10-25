@@ -10,7 +10,7 @@ Tests for `clipmanager` module.
 
 import unittest
 
-from clipmanager import clipmanager
+from clipmanager import clipmanager_main
 
 
 class TestClipmanager(unittest.TestCase):
