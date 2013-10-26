@@ -7,6 +7,30 @@ from PyQt4.QtGui import QStandardItem
 from iconizer.qtconsole.list_window import ItemToActionDictInListUi, ListViewWindow
 
 
+def decode_str_from_encoding(str_buf, encoding):
+    print "decode from", encoding
+    try:
+        return str(str_buf).decode(encoding)
+    except:
+        print "decode from", encoding, "failed"
+        raise
+
+
+def decode_str(str_buf):
+    res = None
+    try:
+        res = unicode(str_buf)
+    except:
+        for encoding in ["gbk", "utf8", "ascii"]:
+            try:
+                res = decode_str_from_encoding(str_buf, encoding)
+                break
+            except:
+                pass
+    return res
+
+
+
 def default_action(item):
     print "click action"
     QtGui.QApplication.quit()
@@ -64,7 +88,7 @@ class ClipboardListUi(ItemToActionDictInListUi):
         data = clipboard.mimeData()
         for form in data.formats():
             print form, '------------------', data.data(form)
-            content = str(data.data(form)).decode(errors='replace')
+            content = decode_str(data.data(form))
             self.__setitem__(u"%s --> %s" % (form, content), {"action": self.do_nothing})
             #self.__setitem__(content, {"action": self.do_nothing})
             #self.__setitem__(form, {"action": self.do_nothing})
