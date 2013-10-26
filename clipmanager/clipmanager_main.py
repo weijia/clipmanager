@@ -33,27 +33,13 @@ class ListItem(object):
 class ClipboardList(ListViewWindow):
     def __init__(self):
         super(ClipboardList, self).__init__()
-        self.installEventFilter(self)
-
-    def eventFilter(self, object, event):
-        if event.type() == QtCore.QEvent.WindowActivate:
-            print "widget window has gained focus"
-            clipboard = QtGui.QApplication.clipboard()
-            print clipboard.text()
-        '''
-        elif event.type()== QtCore.QEvent.WindowDeactivate:
-            print "widget window has lost focus"
-        elif event.type()== QtCore.QEvent.FocusIn:
-            print "widget has gained keyboard focus"
-        elif event.type()== QtCore.QEvent.FocusOut:
-            print "widget has lost keyboard focus"
-        '''
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
 
 class ClipboardListUi(ItemToActionDictInListUi):
     def new_ui_item(self, key):
         ui_item = QStandardItem(key)
-        ui_item.setCheckable(True)
+        #ui_item.setCheckable(True)
         self.ui_widget.model.appendRow(ui_item)
         return ui_item
 
@@ -65,20 +51,32 @@ class ClipboardListUi(ItemToActionDictInListUi):
         else:
             item = self.new_ui_item(key)
 
-        if ("checked" in value) and (value["checked"]):
-            item.setCheckState(Qt.Checked)
-        else:
-            item.setCheckState(Qt.Unchecked)
         self.item_to_action_dict[key] = value["action"]
         self.item_dict[key] = value
         self.key2item[key] = item
+
+    def do_nothing(self, text):
+        pass
+
+    def process_clipboard(self):
+        clipboard = QtGui.QApplication.clipboard()
+        #print clipboard.text()
+        data = clipboard.mimeData()
+        for form in data.formats():
+            print form, '------------------', data.data(form)
+            content = str(data.data(form)).decode(errors='replace')
+            self.__setitem__(u"%s --> %s" % (form, content), {"action": self.do_nothing})
+            #self.__setitem__(content, {"action": self.do_nothing})
+            #self.__setitem__(form, {"action": self.do_nothing})
 
 
 def main():
     app = QtGui.QApplication(sys.argv)
     clip_list = ClipboardListUi(list_window_class=ClipboardList)
+    clipboard = QtGui.QApplication.clipboard()
+    clipboard.dataChanged.connect(clip_list.process_clipboard)
     #clip_list["good"] = {"checked": False, "action": default_action}
-    clip_list["good"] = ListItem(True, default_action)
+    #clip_list["good"] = ListItem(True, default_action)
     clip_list.show()
     sys.exit(app.exec_())
 
